@@ -19,58 +19,9 @@ namespace GenericStageInjectionCommon
         /// Individual Vertices of the Spline File.
         /// </summary>
         public List<SplineVertex> Vertices;
-
-        // I think doing it in this order would get us the shortest code count:
-
-        // declare list of headers
-        // foreach (spline obj file)
-        //     parse vertices, calculate distance to next, etc.
-        //     write vertices to memory
-        //     generate header, get vertex count, count total length, write pointer to vertices and set spline type
-        //     append header to list
-        // Write out list of headers to memory.
-        // Patch push address to list of headers.
-
-
-        // Hey there!
-        // I've an idea.
-        // We can ditch this class and do with a slightly redefined SplineHeader and unsafe code.
-        // We can redefine "public int PointerVertexList" as "public SplineVertex[] *PointerVertexList;"
-        // This way we can even generate the vertex list in the constructor of the spline header, in fact, probably do an entire header in one function (which we break into smaller subfunctions).
-
-        // won't that cause issues when writing the header to memory?
-        // Never tried writing a pointer but I assume it'd just write the address of it to memory.
-        // it would write the address in the mod, not the target proccess
-        // We would generate the Vertex list, write it to memory with Reloaded's MemoryBuffer (more optimized, simpler version of manually allocating and writing memory)
-        // and use the return address (where it was written to), assign it to *PointerVertexList;
-        // Basically it would wield the same result, except we can access the vertex list without extra lines of code via an unsafe C/C++ style pointer.
-
-        // Well yeah I guess it can be done like that
-        // That said, what should we do about the settings inside our OBJ files? Keep them there?
-        // It's specialized for our use so I guess it can't hurt.
-        // Yeah, no need to change that
-        // The alternative would be a separate file for the spline settings | Sounds unnecessary really, extra code baggage.
-        // Yep, and the function can read an obj without the settings
-
-        // On that note, lemme fetch something...
-
+        
         public static Spline FromFile(string fileName)
         {
-            // -------
-            // I don't even get the hints for namespaces lol, have to remember stuff like System.IO manually.
-
-            // Can you save SplineHeader? I can't edit it for some reason.
-            // It's bugged till you type there I guess.
-            // Or something /shrug
-            // I just did
-            // maybe you should work on it from your end
-            // idk :3
-            // I need a nap myself anyway :3
-            // Yeah that'd be neat :3
-
-            // I'm gonna close this soon so
-            // I should put it on github and add you as contributor
-
             // Set Culture
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
@@ -115,10 +66,10 @@ namespace GenericStageInjectionCommon
                     }
                     else if (OBJ_File[i].StartsWith("v"))
                     {
-                        string[] a = Regex.Replace(OBJ_File[i], @"\s+", " ").Split();
+                        Vertex_XYZ = Regex.Replace(OBJ_File[i], @"\s+", " ").Split();
 
                         // Define a new Vertex.
-                        SplineVertex TempVertex = new SplineVertex(Convert.ToSingle(a[1]), Convert.ToSingle(a[2]), Convert.ToSingle(a[3]));
+                        SplineVertex TempVertex = new SplineVertex(Convert.ToSingle(Vertex_XYZ[1]), Convert.ToSingle(Vertex_XYZ[2]), Convert.ToSingle(Vertex_XYZ[3]));
                         
                         // Set Flags
                         TempVertex.UnknownRotation = SplineVertexFlags;
