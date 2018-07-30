@@ -1,6 +1,6 @@
 using GenericStageInjectionCommon.Structs.Enums;
 
-namespace GenericStageInjectionCommon.Structs.Positions
+namespace GenericStageInjectionCommon.Structs.Positions.Substructures
 {
     /// <summary>
     /// Describes the position and how the player starts off the stage.
@@ -25,7 +25,7 @@ namespace GenericStageInjectionCommon.Structs.Positions
         public StartPositionMode Mode;
 
         /// <summary>
-        /// Time spent running in Running mode, in frames.
+        /// Time spent running in Running mode or without controller control, in frames.
         /// </summary>
         public int HoldTime;
     }

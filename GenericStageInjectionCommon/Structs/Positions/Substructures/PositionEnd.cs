@@ -1,4 +1,4 @@
-namespace GenericStageInjectionCommon.Structs.Positions
+namespace GenericStageInjectionCommon.Structs.Positions.Substructures
 {
     /// <summary>
     /// Represents a coordinate whereby an individual team performs their ending poses after finishing a stage.

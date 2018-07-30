@@ -1,6 +1,4 @@
-using System;
-
-namespace GenericStageInjectionCommon.Structs
+namespace GenericStageInjectionCommon.Structs.Splines
 {
     /// <summary>
     /// Represents an individual vertex of a SADX/SA2/Heroes spline.
@@ -24,13 +22,17 @@ namespace GenericStageInjectionCommon.Structs
         /// </summary>
         public Vector Position;
 
-        public SplineVertex(float X, float Y, float Z) : this (new Vector(X, Y, Z))
+        public SplineVertex(float X, float Y, float Z) : this(new Vector(X, Y, Z))
         {
         }
 
-        public SplineVertex(Vector Position)
+        /// <summary>
+        /// Creates an instance of a vertex from a mutually predefined position.
+        /// </summary>
+        /// <param name="position">The initial position of the vertex to write to.</param>
+        public SplineVertex(Vector position)
         {
-            this.Position = Position;
+            this.Position = position;
             DistanceToNextVertex = 0;
             UnknownRotation = 0;
         }

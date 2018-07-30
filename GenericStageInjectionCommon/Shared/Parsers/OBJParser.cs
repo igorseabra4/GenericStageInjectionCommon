@@ -3,6 +3,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using GenericStageInjectionCommon.Structs;
+using static System.Threading.Thread;
 
 namespace GenericStageInjectionCommon.Shared.Parsers
 {
@@ -14,7 +15,7 @@ namespace GenericStageInjectionCommon.Shared.Parsers
         /// <summary>
         /// Stores the contents of the Wavefront OBJ File.
         /// </summary>
-        private string[] _objFileString;
+        public string[] ObjTextFile { get; private set; }
 
         /// <summary>
         /// Match object for storing the results of each regex capture groups.
@@ -22,30 +23,40 @@ namespace GenericStageInjectionCommon.Shared.Parsers
         private Match _regexMatch;
 
         /// <summary>
+        /// Stores the list of individual vertices for the current OBJ model.
+        /// </summary>
+        public List<Vector> Vertices
+        {
+                    get => Vertices ?? (Vertices = ReadVertices());
+            private set => Vertices = value;
+        }
+
+        /// <summary>
+        /// Stores the list of individual triangles for the current OBJ model.
+        /// </summary>
+        public List<Triangle> Triangles
+        {
+                    get => Triangles ?? (Triangles = ReadTriangles(Vertices));
+            private set => Triangles = value;
+        }
+
+        /// <summary>
         /// [Constructor] Initializes the class.
         /// </summary>
         public ObjParser(string objFilePath)
         {
-            // Load Actual OBJ File
-            _objFileString = File.ReadAllLines(objFilePath);
-        }
+            // Set Culture
+            CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
-        /// <summary>
-        /// Returns the complete version of the OBJ File with the necessary information to generate collision.
-        /// After running, use GetCollisionFile to retrieve the information. (or GetVertices/GetTriangles)
-        /// </summary>
-        public List<Triangle> ReadObjFile()
-        {
-            // Calculate the vertices and triangles and return each of them.
-            List<Vector> vertices = ReadVertices();
-            return ReadTriangles(vertices);
+            // Load Actual OBJ File
+            ObjTextFile = File.ReadAllLines(objFilePath);
         }
 
         /// <summary>
         /// Works out all of the vertices from the Wavefront OBJ File.
         /// After running, use GetVertices to retrieve the information. 
         /// </summary>
-        public List<Vector> ReadVertices()
+        private List<Vector> ReadVertices()
         {
             List<Vector> vertices = new List<Vector>();
 
@@ -59,7 +70,7 @@ namespace GenericStageInjectionCommon.Shared.Parsers
             try
             {
                 // Parse the file line by line.
-                foreach (String line in _objFileString)
+                foreach (String line in ObjTextFile)
                 {
                     // If the line defines a vertex.
                     if (line.StartsWith("v"))
@@ -105,7 +116,7 @@ namespace GenericStageInjectionCommon.Shared.Parsers
         /// Works out all of the triangles' vertices from the Wavefront OBJ File.
         /// After running, use GetTriangles to retrieve the information. 
         /// </summary>
-        public List<Triangle> ReadTriangles(List<Vector> vertices)
+        private List<Triangle> ReadTriangles(List<Vector> vertices)
         {
             List<Triangle> triangles = new List<Triangle>();
 
@@ -119,7 +130,7 @@ namespace GenericStageInjectionCommon.Shared.Parsers
             try
             {
                 // Parse the file line by line.
-                foreach (String line in _objFileString)
+                foreach (String line in ObjTextFile)
                 {
                     // If the line defines a face.
                     if (line.StartsWith("f"))

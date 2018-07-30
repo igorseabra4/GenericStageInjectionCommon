@@ -1,6 +1,6 @@
 using System;
 
-namespace GenericStageInjectionCommon.Structs.Extensions
+namespace GenericStageInjectionCommon.Structs.Splines
 {
     /// <summary>
     /// Provides extension methods for the SplineVertex struct.
@@ -8,7 +8,7 @@ namespace GenericStageInjectionCommon.Structs.Extensions
     public static class SplineVertexExtensions
     {
         /// <summary>
-        /// Calculates the <see cref="DistanceToNextVertex"> for our individual vertex.
+        /// Calculates the <see cref="SplineVertex.DistanceToNextVertex"> for our individual vertex.
         /// </summary>
         public static float CalculateDistanceToNext(this SplineVertex vertex1, SplineVertex vertex2)
         {
