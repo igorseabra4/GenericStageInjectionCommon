@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security.Permissions;
+using GenericStageInjectionCommon.Shared;
+using GenericStageInjectionCommon.Shared.Ingame;
 using Reloaded;
-using Reloaded.Assembler;
+using Reloaded.IO;
 using Reloaded.Process;
+using Reloaded.Process.Functions.X86Hooking;
+using Reloaded.Process.Native;
+using static GenericStageInjection.Hooks;
 
-namespace Reloaded_Mod_Template
+namespace GenericStageInjection
 {
     public static unsafe class Program
     {
+        #region Disclaimer
         /*
          *  Reloaded Mod Loader DLL Modification Template
          *  Sewer56, 2018 ©
@@ -87,7 +91,9 @@ namespace Reloaded_Mod_Template
          *  Please keep this notice here for future contributors or interested parties.
          *  If it bothers you, consider wrapping it in a #region.
         */
+        #endregion Disclaimer
 
+        #region Reloaded Template Default Variables
         /*
             Default Variables:
             These variables are automatically assigned by the mod template, you do not
@@ -111,19 +117,196 @@ namespace Reloaded_Mod_Template
         /// is contained in.
         /// </summary>
         public static string ModDirectory;
+        #endregion
+
+        /// <summary>
+        /// Contains the list of individual stages
+        /// that are about to be loaded/injected.
+        /// </summary>
+        private static List<Stage> _stages = new List<Stage>();
         
         /// <summary>
-        /// Your own user code starts here.
-        /// If this is your first time, do consider reading the notice above.
-        /// It contains some very useful information.
+        /// Hooks the game's InitPath function in order to 
+        /// replace the splines about to be loaded.
+        /// </summary>
+        private static FunctionHook<InitPath> _initPathHook;
+
+        /// <summary>
+        /// Hooks the Windows API NtCreateFile hook in order to provide file redirection to each of the individual mod
+        /// folders.
+        /// </summary>
+        private static FunctionHook<NtCreateFile> _ntCreateFileHook;
+
+        /// <summary>
+        /// Maps file paths to be accessed by the game to another file path which
+        /// belongs to an individual stage.
+        /// </summary>
+        private static Dictionary<string, string> _remapperDictionary;
+
+        /// <summary>
+        /// Used to store a singular unique filesystem watcher for each individual stage folder, Files directory.
+        /// Fires events which cause a rebuild of the file redirection dictionary on file additions, removals and overrides.
+        /// </summary>
+        private static Dictionary<Stage, FileSystemWatcher> _fileSystemWatcherDictionary = new Dictionary<Stage, FileSystemWatcher>();
+
+        /// <summary>
+        /// Read all of the individual game configurations and their corresponding spline lists.
         /// </summary>
         public static unsafe void Init()
         {
-            #if DEBUG
-            Debugger.Launch();
-            #endif
+            // TODO: General library for hacking Sonic Heroes from which to source 0x00439020, 0x8D6710 and other addresses from.
+            // TODO: Test this program, I haven't started it once, yet.
 
-            Bindings.PrintInfo("Hello World!");
+            // Populate all Stages.
+            string[] stageDirectories = Directory.GetDirectories(ModDirectory + "\\Stages\\");
+
+            // Load all stages.
+            foreach (var stageDirectory in stageDirectories)
+                _stages.Add(new Stage(stageDirectory));
+
+            // Get the pointers for the individual stage then apply a new spawn configuration for them.
+            foreach (var stage in _stages)    
+                StageInfo.ApplyConfig(StageInfo.GetStageInfo(stage.StageConfig.StageId), stage.StageConfig);
+            
+            // Setup file redirections 
+            BuildFileRedirectionDictionary(_stages);
+
+            // Setup spline load hook.
+            _initPathHook = FunctionHook<InitPath>.Create(0x00439020, InitPathImpl).Activate();
+
+            // Get the address of the WinAPI NtCreateFile Windows function inside ntdll and hook it.
+            IntPtr ntdllHandle = Native.LoadLibraryW("ntdll");
+            IntPtr ntCreateFilePointer = Native.GetProcAddress(ntdllHandle, "NtCreateFile");
+            _ntCreateFileHook = FunctionHook<NtCreateFile>.Create((long)ntCreateFilePointer, FileRedirectionHook).Activate();
+        }
+
+        /// <summary>
+        /// Contains the implementation of the NtCreateFile hook.
+        /// Conditionally redirects oncoming files through changing ObjectName inside the objectAttributes instance.
+        /// </summary>
+        private static int FileRedirectionHook(out IntPtr handle, FileAccess access, ref OBJECT_ATTRIBUTES objectAttributes, ref IO_STATUS_BLOCK ioStatus, ref long allocSize, uint fileAttributes, FileShare share, uint createDisposition, uint createOptions, IntPtr eaBuffer, uint eaLength)
+        {
+            // Our FIle Path.
+            string filePath = GetNtCreateFilePath(ref objectAttributes);
+
+            if (_remapperDictionary.TryGetValue(filePath, out string newFilePath))
+            {
+                #region DEBUG PRINT
+                #if DEBUG
+                Bindings.PrintInfo($"Stage Injection File Redirection: {filePath} => {newFilePath}");
+                #endif
+                #endregion
+
+                // Set new filename.
+                objectAttributes.ObjectName = new UNICODE_STRING("\\??\\" + newFilePath);
+                objectAttributes.RootDirectory = IntPtr.Zero;
+            }
+
+            // Call original.
+            return _ntCreateFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
+        }
+
+        /// <summary>
+        /// Retrieves the full file path from an OBJECT_ATTRIBUTES structure passed into the
+        /// NtDll function NtCreateFile.
+        /// </summary>
+        /// <returns>The full file path to the file to be loaded.</returns>
+        private static string GetNtCreateFilePath(ref OBJECT_ATTRIBUTES objectAttributes)
+        {
+            // Retrieves the file name that we are attempting to access.
+            string oldFileName = objectAttributes.ObjectName.ToString();
+
+            // Sometimes life can be a bit ugly :/
+            if (oldFileName.StartsWith("\\??\\", StringComparison.InvariantCultureIgnoreCase))
+            { oldFileName = oldFileName.Replace("\\??\\", ""); }
+
+            return Path.GetFullPath(oldFileName);
+        }
+
+        /// <summary>
+        /// Builds a dictionary mapping the files of each individual stage
+        /// to a file in Sonic Heroes' dvdroot directory.
+        /// </summary>
+        /// <param name="stages">List of stages to create a mapping for.</param>
+        private static void BuildFileRedirectionDictionary(List<Stage> stages)
+        {
+            // Local stage to stage mapping.
+            Dictionary<string, string> remapperDictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // We don't need to pull Reloaded-IO for this one as a dependency since we're only working with Sonic Heroes
+            // TSonic_win is guaranteed to be in the same folder as dvdroot.
+            string dvdrootPath = Path.GetDirectoryName(ExecutingGameLocation) + "\\dvdroot";
+
+            // Setup remapping for each stage and 
+            foreach (var stage in stages)
+            {
+                // Check for file redirect path existence.
+                if (Directory.Exists(stage.FilesFolderPath))
+                {
+                    // Retrieve a listing of all files relative to this directory.
+                    List<string> stageFiles = RelativePaths.GetRelativeFilePaths(stage.FilesFolderPath);
+
+                    // Setup redirects.
+                    foreach (var stageFile in stageFiles)
+                    {
+                        // Get old path to relocate and new replacement path.
+                        string gameFilePath = dvdrootPath + stageFile;
+                        string newFilePath = stage.FilesFolderPath + stageFile;
+
+                        // Normalize the path format (ensure consistent format).
+                        gameFilePath = Path.GetFullPath(gameFilePath);
+                        newFilePath = Path.GetFullPath(newFilePath);
+
+                        // Appends to the file path replacement dictionary.
+                        remapperDictionary[gameFilePath] = newFilePath;
+                    }
+
+                    // Setup event based, realtime file addition/removal as new files are removed or added if not setup.
+                    if (!_fileSystemWatcherDictionary.ContainsKey(stage)) // Ensure this is only done once.
+                    {
+                        FileSystemWatcher fileSystemWatcher = new FileSystemWatcher(stage.FilesFolderPath);
+                        fileSystemWatcher.EnableRaisingEvents = true;
+                        fileSystemWatcher.IncludeSubdirectories = true;
+                        fileSystemWatcher.Created += (sender, args) => { BuildFileRedirectionDictionary(_stages); };
+                        fileSystemWatcher.Deleted += (sender, args) => { BuildFileRedirectionDictionary(_stages); };
+                        fileSystemWatcher.Renamed += (sender, args) => { BuildFileRedirectionDictionary(_stages); };
+                        _fileSystemWatcherDictionary.Add(stage, fileSystemWatcher);
+                    }
+                }
+            }
+
+            _remapperDictionary = remapperDictionary;
+        }
+        
+        /// <summary>
+        /// Hook for Sonic Heroes' InitPath that checks the current stage ID and loads an altnernate spline set if
+        /// a replaced stage is about to be loaded.
+        /// </summary>
+        /// <param name="splinePointerArray">
+        ///     A pointer to a null pointer delimited list of pointers to the Spline structures.
+        ///     C/C++: `Spline**`
+        ///     
+        ///     C#: ref Spline = Spline*
+        ///     Note: Spline is a class, thus the actual instance stored in the array is a pointer, thus the parameter is Spline**.
+        /// </param>
+        /// <returns>A value of 1 or 0 for success/failure.</returns>
+        private static int InitPathImpl(ref Spline[] splinePointerArray)
+        {
+            // Get current level ID.
+            int currentStage = *(int*)0x8D6710;
+
+            // Try finding a stage to inject containing the current stage's splines.
+            foreach (Stage stage in _stages)
+            {
+                if ((int)stage.StageConfig.StageId == currentStage)
+                {
+                    // We've found our stage for whici to replace splines, call original function with our own spline set.
+                    return _initPathHook.OriginalFunction(ref stage.Splines);
+                }
+            }
+
+            // Call the original function; no injected stage requiring override found.
+            return _initPathHook.OriginalFunction(ref splinePointerArray);
         }
     }
 }

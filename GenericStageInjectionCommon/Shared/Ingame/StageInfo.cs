@@ -108,7 +108,7 @@ namespace GenericStageInjectionCommon.Shared.Ingame
         /// </summary>
         /// <param name="stageInfo">Contains the pointers defining the location of individual entries to override.</param>
         /// <param name="configEntry">Contains the individual spawn positions to be overwritten.</param>
-        public static void ApplyConfig(StageInfo stageInfo, ConfigEntry configEntry)
+        public static void ApplyConfig(StageInfo stageInfo, Config configEntry)
         {
             // Categorize the individual stage and decide if to take 1P or 2P path.
             StageTags.StageTag stageTags = StageTags.CategorizeStage((int)configEntry.StageId);

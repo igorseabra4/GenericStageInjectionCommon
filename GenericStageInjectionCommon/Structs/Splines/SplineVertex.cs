@@ -1,9 +1,12 @@
+using System.Runtime.InteropServices;
+
 namespace GenericStageInjectionCommon.Structs.Splines
 {
     /// <summary>
     /// Represents an individual vertex of a SADX/SA2/Heroes spline.
     /// </summary>
-    public struct SplineVertex
+    [StructLayout(LayoutKind.Sequential)]
+    public class SplineVertex
     {
         /// <summary>
         /// Believed to simply be a polar angle to the next vertex.

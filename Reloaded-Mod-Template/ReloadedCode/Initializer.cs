@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading;
+using GenericStageInjection;
 using LiteNetLib;
 using Reloaded;
 using Reloaded.Paths;
