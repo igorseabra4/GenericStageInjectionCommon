@@ -36,7 +36,7 @@ namespace GenericStageInjection
         /// <summary>
         /// Defines the file name used for storing the current stage's configuration properties.
         /// </summary>
-        public string ConfigFilePath => _stageDirectory + "\\Config.json";
+        public string ConfigFilePath => _stageDirectory + "\\Stage.json";
 
         /// <summary>
         /// Contains the directory containing the individual stage's files.

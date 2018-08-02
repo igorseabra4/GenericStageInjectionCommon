@@ -195,6 +195,7 @@ namespace GenericStageInjection
         ///     Note: Spline is a class, thus the actual instance stored in the array is a pointer, thus the parameter is Spline**.
         /// </param>
         /// <returns></returns>
-        public delegate int InitPath(ref Spline[] splinePointerArray);
+        [ReloadedFunction(CallingConventions.Cdecl)]
+        public delegate bool InitPath(ref Spline[] splinePointerArray);
     }
 }

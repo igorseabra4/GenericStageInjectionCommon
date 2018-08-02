@@ -154,6 +154,7 @@ namespace GenericStageInjection
         /// </summary>
         public static unsafe void Init()
         {
+            Debugger.Launch();
             // TODO: General library for hacking Sonic Heroes from which to source 0x00439020, 0x8D6710 and other addresses from.
             // TODO: Test this program, I haven't started it once, yet.
 
@@ -290,7 +291,7 @@ namespace GenericStageInjection
         ///     Note: Spline is a class, thus the actual instance stored in the array is a pointer, thus the parameter is Spline**.
         /// </param>
         /// <returns>A value of 1 or 0 for success/failure.</returns>
-        private static int InitPathImpl(ref Spline[] splinePointerArray)
+        private static bool InitPathImpl(ref Spline[] splinePointerArray)
         {
             // Get current level ID.
             int currentStage = *(int*)0x8D6710;
