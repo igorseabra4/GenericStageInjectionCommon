@@ -62,7 +62,7 @@ namespace GenericStageInjectionCommon.Shared
         /// <param name="config">The config object instance to write.</param>
         public static void WriteConfigEntries(string path, Config config)
         {
-            string allText = JsonConvert.SerializeObject(config);
+            string allText = JsonConvert.SerializeObject(config, Formatting.Indented);
             File.WriteAllText(path, allText);
         }
     }
