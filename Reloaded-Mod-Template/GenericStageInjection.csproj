@@ -118,6 +118,9 @@
     <PackageReference Include="libReloaded">
       <Version>1.1.9</Version>
     </PackageReference>
+    <PackageReference Include="libReloaded-IO">
+      <Version>1.1.9</Version>
+    </PackageReference>
     <PackageReference Include="libReloaded-Native">
       <Version>1.1.9</Version>
     </PackageReference>
