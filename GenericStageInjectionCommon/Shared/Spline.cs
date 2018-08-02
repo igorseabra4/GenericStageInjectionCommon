@@ -1,16 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using GenericStageInjectionCommon.Shared.Parsers;
 using GenericStageInjectionCommon.Structs.Enums;
+using GenericStageInjectionCommon.Structs.Splines;
 
-namespace GenericStageInjectionCommon.Structs.Splines
+namespace GenericStageInjectionCommon.Shared
 {
     /// <summary>
     /// Struct that defines a spline header.
     /// </summary>
-    public unsafe struct Spline
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe class Spline
     {
         /// <summary>
         /// Always 1
@@ -30,7 +31,7 @@ namespace GenericStageInjectionCommon.Structs.Splines
         /// <summary>
         /// Points to the vertex list for the current individual spline.
         /// </summary>
-        public SplineVertex* VertexList;
+        public SplineVertex[] VertexList;
 
         /// <summary>
         /// Cast Spline_Type
@@ -41,7 +42,7 @@ namespace GenericStageInjectionCommon.Structs.Splines
         /// Instantiates a spline from an individual OBJ file which contains a set of vertices representing the individual points of the spline.
         /// </summary>
         /// <param name="path">An OBJ file containing the points of the spline as vertices.</param>
-        public static Spline* MakeSpline(string path)
+        public static Spline MakeSpline(string path)
         {
             // Store newly created Spline
             Spline spline = new Spline();
@@ -55,28 +56,10 @@ namespace GenericStageInjectionCommon.Structs.Splines
             spline.NumberOfVertices = (ushort)parser.Vertices.Count;
 
             // Get vertices & calculate total length
-            var splineVertices = MakeSplineVertices(ref parser);
-            spline.TotalSplineLength = splineVertices.Sum(x => x.DistanceToNextVertex);
-
-            // Allocate memory for spline vertices and write them.
-            IntPtr unmanagedPointer = Marshal.AllocHGlobal(Marshal.SizeOf(splineVertices));
-            spline.VertexList = (SplineVertex*)unmanagedPointer;
-            Marshal.StructureToPtr(splineVertices, unmanagedPointer, false);
-
-            // Allocate self and return pointer.
-            IntPtr splinePointer = Marshal.AllocHGlobal(Marshal.SizeOf(spline));
-            Marshal.StructureToPtr(spline, splinePointer, false);
-            return (Spline*)splinePointer;
-        }
-
-        /// <summary>
-        /// Dispose of the current spline from memory to leave no residue
-        /// in unmanaged memory.
-        /// </summary>
-        public static void DestroySpline(Spline* spline)
-        {
-            Marshal.FreeHGlobal((IntPtr)(*spline).VertexList);
-            Marshal.FreeHGlobal((IntPtr)spline);
+            spline.VertexList = MakeSplineVertices(ref parser);
+            spline.TotalSplineLength = spline.VertexList.Sum(x => x.DistanceToNextVertex);
+;
+            return spline;
         }
 
         /// <summary>
