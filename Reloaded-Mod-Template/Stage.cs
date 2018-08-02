@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using GenericStageInjectionCommon.Shared;
@@ -11,7 +12,7 @@ namespace GenericStageInjection
     /// <summary>
     /// Contains the individual objects that form an individual internally injectable stage.
     /// </summary>
-    public class Stage
+    public unsafe class Stage : IDisposable
     {
         /// <summary>
         /// Stores the individual stage configuration set by the user.
@@ -21,7 +22,7 @@ namespace GenericStageInjection
         /// <summary>
         /// Holds an array to the current spline table terminated with a null pointer.
         /// </summary>
-        public Spline[] Splines;
+        public Spline** Splines;
 
         /// <summary>
         /// Defines the subfolder used for storing spline content.
@@ -57,12 +58,26 @@ namespace GenericStageInjection
 
             // Get all splines.
             string[] splineFiles = Directory.GetFiles(SplineFolderPath, "*.obj");
-            Splines = new Spline[splineFiles.Length + 1];   // Spline is a class, thus each entry will be a pointer to a Spline instance.
-                                                            // The game uses a null pointer to determine the end of the spline entries to be used in the spline table.
-                                                            // Therefore we create 1 more entry than the list of splines to load, so it has a null pointer.
+
+            // Allocate unmanaged memory for splines
+            Splines = (Spline**)Marshal.AllocHGlobal(sizeof(Spline*) * (splineFiles.Length + 1)); 
+            
+            // We allocate one more than required because the last one should be a null pointer.
+            // The game uses a null pointer to determine end of array.
+
             // Populate Splines.
             for (int x = 0; x < splineFiles.Length; x++)
                 Splines[x] = Spline.MakeSpline(splineFiles[x]);
+                
+        }
+
+        /// <summary>
+        /// Disposes the unmanaged resources from memory.
+        /// </summary>
+        public void Dispose()
+        {
+            // TODO: Does this dispose the whole array? Probably not.
+            Marshal.FreeHGlobal((IntPtr)Splines);
         }
     }
 }

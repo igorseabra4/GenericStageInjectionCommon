@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Forms;
 using GenericStageInjectionCommon.Shared;
 using GenericStageInjectionCommon.Shared.Ingame;
 using Reloaded;
@@ -291,7 +292,7 @@ namespace GenericStageInjection
         ///     Note: Spline is a class, thus the actual instance stored in the array is a pointer, thus the parameter is Spline**.
         /// </param>
         /// <returns>A value of 1 or 0 for success/failure.</returns>
-        private static bool InitPathImpl(ref Spline[] splinePointerArray)
+        private static bool InitPathImpl(Spline** splinePointerArray)
         {
             // Get current level ID.
             int currentStage = *(int*)0x8D6710;
@@ -299,15 +300,15 @@ namespace GenericStageInjection
             // Try finding a stage to inject containing the current stage's splines.
             foreach (Stage stage in _stages)
             {
-                if ((int)stage.StageConfig.StageId == currentStage)
-                {
-                    // We've found our stage for whici to replace splines, call original function with our own spline set.
-                    return _initPathHook.OriginalFunction(ref stage.Splines);
-                }
+                // Skip non-current stages.
+                if ((int) stage.StageConfig.StageId != currentStage) continue;
+
+                // We've found our stage for whici to replace splines, call original function with our own spline set.
+                return _initPathHook.OriginalFunction(stage.Splines);
             }
 
             // Call the original function; no injected stage requiring override found.
-            return _initPathHook.OriginalFunction(ref splinePointerArray);
+            return _initPathHook.OriginalFunction(splinePointerArray);
         }
     }
 }

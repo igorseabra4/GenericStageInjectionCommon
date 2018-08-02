@@ -22,13 +22,16 @@ namespace GenericStageInjectionCommon.Shared.Parsers
         /// </summary>
         private Match _regexMatch;
 
+        private List<Triangle>  _localTriangles;
+        private List<Vector>    _localVertices;
+
         /// <summary>
         /// Stores the list of individual vertices for the current OBJ model.
         /// </summary>
         public List<Vector> Vertices
         {
-                    get => Vertices ?? (Vertices = ReadVertices());
-            private set => Vertices = value;
+            get => _localVertices ?? (_localVertices = ReadVertices());
+            private set => _localVertices = value;
         }
 
         /// <summary>
@@ -36,8 +39,8 @@ namespace GenericStageInjectionCommon.Shared.Parsers
         /// </summary>
         public List<Triangle> Triangles
         {
-                    get => Triangles ?? (Triangles = ReadTriangles(Vertices));
-            private set => Triangles = value;
+                    get => _localTriangles ?? (_localTriangles = ReadTriangles(Vertices));
+            private set => _localTriangles = value;
         }
 
         /// <summary>

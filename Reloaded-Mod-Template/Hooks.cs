@@ -16,7 +16,7 @@ namespace GenericStageInjection
     /// <summary>
     /// Defines the individual delegates that we will use for hooking individual game functions as part of level injection.
     /// </summary>
-    public class Hooks
+    public unsafe class Hooks
     {
         /*
             NtCreateFile hook taken from Reloaded's File Redirector mod (non-legacy).
@@ -189,13 +189,10 @@ namespace GenericStageInjection
         /// </summary>
         /// <param name="splinePointerArray">
         ///     A pointer to a null pointer delimited list of pointers to the Spline structures.
-        ///     C/C++: `Spline**`
-        ///     
-        ///     C#: ref Spline = Spline*
-        ///     Note: Spline is a class, thus the actual instance stored in the array is a pointer, thus the parameter is Spline**.
         /// </param>
         /// <returns></returns>
         [ReloadedFunction(CallingConventions.Cdecl)]
-        public delegate bool InitPath(ref Spline[] splinePointerArray);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate bool InitPath(Spline** splinePointerArray);
     }
 }
