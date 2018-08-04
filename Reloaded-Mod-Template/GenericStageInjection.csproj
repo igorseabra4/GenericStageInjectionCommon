@@ -114,19 +114,19 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="libReloaded">
-      <Version>1.1.9</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="libReloaded-IO">
-      <Version>1.1.9</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="libReloaded-Native">
-      <Version>1.1.9</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="libReloaded-Networking">
-      <Version>1.1.9</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="libReloaded-Paths">
-      <Version>1.1.9</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="LiteNetLib-custom">
       <Version>0.0.1</Version>
