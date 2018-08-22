@@ -60,7 +60,9 @@ namespace GenericStageInjection
             string[] splineFiles = Directory.GetFiles(SplineFolderPath, "*.obj");
 
             // Allocate unmanaged memory for splines
-            Splines = (Spline**)Marshal.AllocHGlobal(sizeof(Spline*) * (splineFiles.Length + 1)); 
+            int pointerSize = sizeof(Spline*);
+            int splineArraySize = pointerSize * (splineFiles.Length + 1);
+            Splines = (Spline**)Marshal.AllocHGlobal(splineArraySize); 
             
             // We allocate one more than required because the last one should be a null pointer.
             // The game uses a null pointer to determine end of array.
@@ -68,7 +70,8 @@ namespace GenericStageInjection
             // Populate Splines.
             for (int x = 0; x < splineFiles.Length; x++)
                 Splines[x] = Spline.MakeSpline(splineFiles[x]);
-                
+
+            Splines[splineFiles.Length] = (Spline*)0;
         }
 
         /// <summary>

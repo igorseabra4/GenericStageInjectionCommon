@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 using GenericStageInjectionCommon.Shared;
 using GenericStageInjectionCommon.Shared.Ingame;
@@ -156,6 +157,11 @@ namespace GenericStageInjection
         public static unsafe void Init()
         {
             Debugger.Launch();
+
+            // Just in case.
+            Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+
             // TODO: General library for hacking Sonic Heroes from which to source 0x00439020, 0x8D6710 and other addresses from.
             // TODO: Test this program, I haven't started it once, yet.
 
@@ -301,7 +307,8 @@ namespace GenericStageInjection
             foreach (Stage stage in _stages)
             {
                 // Skip non-current stages.
-                if ((int) stage.StageConfig.StageId != currentStage) continue;
+                if ((int) stage.StageConfig.StageId != currentStage)
+                    continue;
 
                 // We've found our stage for whici to replace splines, call original function with our own spline set.
                 return _initPathHook.OriginalFunction(stage.Splines);
