@@ -5,11 +5,10 @@ using System.Text;
 namespace GenericStageInjectionCommon.Shared.Enums
 {
     /// <summary>
-    /// All of the individual IDs used for each stage. Each is a [Byte]
+    /// All of the individual IDs used for each stage. Each is an [int]
     /// </summary>
-    public enum StageID : byte
+    public enum StageID : int
     {
-
         Null = 0x00,
 
         // Stages
