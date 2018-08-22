@@ -25,6 +25,11 @@ namespace GenericStageInjection
         public Spline** Splines;
 
         /// <summary>
+        /// Contains the number of splines that are
+        /// </summary>
+        public int SplineCount;
+
+        /// <summary>
         /// Defines the subfolder used for storing spline content.
         /// </summary>
         public string SplineFolderPath => _stageDirectory + "\\Splines";
@@ -72,6 +77,7 @@ namespace GenericStageInjection
                 Splines[x] = Spline.MakeSpline(splineFiles[x]);
 
             Splines[splineFiles.Length] = (Spline*)0;
+            SplineCount = splineFiles.Length;
         }
 
         /// <summary>
@@ -79,7 +85,10 @@ namespace GenericStageInjection
         /// </summary>
         public void Dispose()
         {
-            // TODO: Does this dispose the whole array? Probably not.
+            for (int x = 0; x < SplineCount; x++)
+            {
+                Spline.DestroySpline(Splines[x]);
+            }
             Marshal.FreeHGlobal((IntPtr)Splines);
         }
     }
