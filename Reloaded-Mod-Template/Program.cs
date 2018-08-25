@@ -156,7 +156,9 @@ namespace GenericStageInjection
         /// </summary>
         public static unsafe void Init()
         {
+            # if DEBUG
             Debugger.Launch();
+            #endif
 
             // Just in case.
             Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
