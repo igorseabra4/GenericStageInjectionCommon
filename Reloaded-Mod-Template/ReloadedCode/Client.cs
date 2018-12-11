@@ -1,9 +1,8 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using libReloaded_Networking;
 using LiteNetLib;
 
-namespace Reloaded_Mod_Template.ReloadedCode
+namespace GenericStageInjection.ReloadedCode
 {
     /// <summary>
     /// Class used for providing services via communication with the Mod Loader server.
@@ -88,7 +87,7 @@ namespace Reloaded_Mod_Template.ReloadedCode
             // Build a Server Message with text to print.
             // The style of the message is user-set.
             Message clientMessage = new Message((ushort)MessageTypes.MessageType.PrintTextUnicode, bytesToSend);
-            
+
             // Switch message type if necessary.
             switch (printMessageType)
             {
@@ -96,7 +95,7 @@ namespace Reloaded_Mod_Template.ReloadedCode
                 case PrintMessageType.PrintError: clientMessage.MessageType = (ushort)MessageTypes.MessageType.PrintErrorUnicode; break;
                 case PrintMessageType.PrintWarning: clientMessage.MessageType = (ushort)MessageTypes.MessageType.PrintWarningUnicode; break;
             }
-             
+
             // Send the message.
             ReloadedClient.GetFirstPeer()?.Send(clientMessage.GetBytes(), SendOptions.ReliableOrdered);
         }
