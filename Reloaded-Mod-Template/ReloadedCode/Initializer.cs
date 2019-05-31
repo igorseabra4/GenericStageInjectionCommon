@@ -42,7 +42,6 @@ namespace GenericStageInjection.ReloadedCode
         public static void Main(IntPtr portAddress)
         {
             // Retrieve Assemblies from the "Libraries" folder.
-            Debugger.Launch();
             AppDomain.CurrentDomain.AssemblyResolve += LocalAssemblyFinder.ResolveAppDomainAssembly;
 
             // Try restarting in another AppDomain if possible.
