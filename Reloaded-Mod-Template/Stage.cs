@@ -80,6 +80,11 @@ namespace GenericStageInjection
             SplineCount = splineFiles.Length;
         }
 
+        ~Stage()
+        {
+            Dispose();
+        }
+
         /// <summary>
         /// Disposes the unmanaged resources from memory.
         /// </summary>
@@ -90,6 +95,7 @@ namespace GenericStageInjection
                 Spline.DestroySpline(Splines[x]);
             }
             Marshal.FreeHGlobal((IntPtr)Splines);
+            GC.SuppressFinalize(this);
         }
     }
 }

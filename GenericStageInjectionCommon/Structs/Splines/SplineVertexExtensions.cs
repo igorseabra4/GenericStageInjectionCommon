@@ -16,5 +16,12 @@ namespace GenericStageInjectionCommon.Structs.Splines
 
             return (float)Math.Sqrt(Math.Pow(delta.X, 2) + Math.Pow(delta.Y, 2) + Math.Pow(delta.Z, 2));
         }
+
+        public static float Distance(Vector vertex1, Vector vertex2)
+        {
+            Vector delta = vertex1 - vertex2;
+
+            return (float)Math.Sqrt(Math.Pow(delta.X, 2) + Math.Pow(delta.Y, 2) + Math.Pow(delta.Z, 2));
+        }
     }
 }
